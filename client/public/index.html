@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Tracker</title>
+    <!-- Use a real favicon image for best results -->
+    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg">
+    <style>
+      .splash-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f3ec78 0%, #af4261 100%);
+      }
+      .loader {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #f43f5e;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        animation: spin 1.2s linear infinite;
+        margin-right: 18px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg);}
+        100% { transform: rotate(360deg);}
+      }
+      .splash-title {
+        font-family: monospace;
+        font-size: 2rem;
+        background: linear-gradient(90deg, #f43f5e, #3b82f6, #22d3ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Splash screen before React loads -->
+    <div id="splash" class="splash-screen">
+      <div class="loader"></div>
+      <span class="splash-title">Loading Issue Tracker…</span>
+    </div>
+    <div id="root"></div>
+    <script>
+      // Hide splash when React takes over
+      window.addEventListener('DOMContentLoaded', function() {
+        var splash = document.getElementById('splash');
+        var root = document.getElementById('root');
+        var observer = new MutationObserver(function() {
+          if (root.childNodes.length) {
+            splash.style.display = 'none';
+          }
+        });
+        observer.observe(root, {childList: true});
+      });
+    </script>
+  </body>
+</html>
