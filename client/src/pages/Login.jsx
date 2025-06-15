@@ -1,6 +1,7 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = ({ setAuth }) => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -8,18 +9,19 @@ const Login = ({ setAuth }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      // ✅ Replace hardcoded path with env-based API URL
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/users/login`, form);
-
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/users/login`,
+        form
+      );
       localStorage.setItem('token', res.data.token);
       setAuth(true);
       navigate('/dashboard');
@@ -32,8 +34,13 @@ const Login = ({ setAuth }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
-      <form onSubmit={handleSubmit} className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-        <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-6">Welcome Back</h2>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
+      >
+        <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-6">
+          Welcome Back
+        </h2>
 
         {error && (
           <div className="mb-4 p-3 text-red-700 bg-red-100 border border-red-300 rounded">
@@ -70,9 +77,9 @@ const Login = ({ setAuth }) => {
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Don’t have an account?{' '}
-          <a href="/" className="text-blue-600 hover:underline font-medium">
+          <Link to="/register" className="text-blue-600 hover:underline font-medium">
             Register
-          </a>
+          </Link>
         </p>
       </form>
     </div>

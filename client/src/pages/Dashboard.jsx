@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import TicketsBoard from '../components/TicketsBoard';
+import DndTicketsBoard from '../components/DndTicketsBoard';  // <-- correct import
 import {
   PlusCircleIcon,
   PencilSquareIcon,
@@ -28,12 +28,14 @@ export default function Dashboard() {
       .catch(console.error);
   }, []);
 
+  // Breadcrumbs
   const breadcrumbs = [
     { label: 'Home', to: '/' },
     { label: 'Dashboard', to: '/dashboard' },
     currentProject && { label: currentProject.title }
   ].filter(Boolean);
 
+  // Create project
   const createProject = async e => {
     e.preventDefault();
     await axios.post(`${process.env.REACT_APP_API_URL}/projects`, {
@@ -42,11 +44,14 @@ export default function Dashboard() {
       teamMembers: newTeamMembers.split(',').map(email => email.trim()),
     });
     setShowModal(false);
-    setNewProject(''); setNewDescription(''); setNewTeamMembers('');
+    setNewProject('');
+    setNewDescription('');
+    setNewTeamMembers('');
     const res = await axios.get(`${process.env.REACT_APP_API_URL}/projects`);
     setProjects(res.data);
   };
 
+  // Update project
   const updateProject = async id => {
     const p = projects.find(p => p._id === id);
     const title = prompt('New title:', p.title);
@@ -54,7 +59,8 @@ export default function Dashboard() {
     const members = prompt('Team emails (comma):', p.teamMembers.join(', '));
     if (title && desc && members) {
       await axios.put(`${process.env.REACT_APP_API_URL}/projects/${id}`, {
-        title, description: desc,
+        title,
+        description: desc,
         teamMembers: members.split(',').map(m => m.trim())
       });
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/projects`);
@@ -62,6 +68,7 @@ export default function Dashboard() {
     }
   };
 
+  // Delete project
   const deleteProject = async id => {
     if (window.confirm('Delete this project?')) {
       await axios.delete(`${process.env.REACT_APP_API_URL}/projects/${id}`);
@@ -126,8 +133,7 @@ export default function Dashboard() {
               <div
                 key={p._id}
                 onClick={() => setCurrentProject(p)}
-                className={`
-                  relative p-6 bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl shadow-lg 
+                className={`relative p-6 bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl shadow-lg 
                   hover:shadow-2xl transition transform hover:-translate-y-1 cursor-pointer
                   ${currentProject?._id === p._id ? 'ring-4 ring-pink-400' : ''}
                 `}
@@ -135,17 +141,23 @@ export default function Dashboard() {
                 <h3 className="text-2xl font-bold mb-2">{p.title}</h3>
                 <p className="text-gray-700 mb-4 line-clamp-2">{p.description || 'No description'}</p>
                 <div className="flex flex-wrap gap-2">
-                  {p.teamMembers.map((m,i) => (
+                  {p.teamMembers.map((m, i) => (
                     <span key={i} className="bg-pink-100 text-pink-700 px-2 py-1 rounded-full text-xs">
                       {m}
                     </span>
                   ))}
                 </div>
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                  <button onClick={e => { e.stopPropagation(); updateProject(p._id); }} className="text-yellow-500">
+                  <button
+                    onClick={e => { e.stopPropagation(); updateProject(p._id); }}
+                    className="text-yellow-500"
+                  >
                     <PencilSquareIcon className="h-5 w-5" />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); deleteProject(p._id); }} className="text-red-500">
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteProject(p._id); }}
+                    className="text-red-500"
+                  >
                     <TrashIcon className="h-5 w-5" />
                   </button>
                 </div>
@@ -153,17 +165,23 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Ticket Board */}
-          {currentProject
-            ? <TicketsBoard project={currentProject} token={localStorage.getItem('token')} />
-            : <div className="text-center text-gray-600 mt-20 text-lg">Select a project to view tickets</div>
-          }
+          {/* Drag-and-Drop Ticket Board */}
+          {currentProject ? (
+            <DndTicketsBoard project={currentProject} token={localStorage.getItem('token')} />
+          ) : (
+            <div className="text-center text-gray-600 mt-20 text-lg">
+              Select a project to view tickets
+            </div>
+          )}
 
           {/* Create Project Modal */}
           {showModal && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-40">
               <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md relative">
-                <button className="absolute top-4 right-4 text-gray-400 hover:text-red-500" onClick={() => setShowModal(false)}>
+                <button
+                  className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                  onClick={() => setShowModal(false)}
+                >
                   <XMarkIcon className="h-6 w-6" />
                 </button>
                 <h2 className="text-2xl font-semibold text-center mb-6">Create New Project</h2>

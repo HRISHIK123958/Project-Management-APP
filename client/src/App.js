@@ -1,41 +1,49 @@
+// src/App.js
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard'; // ✅ Make sure this file exists
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate
+} from 'react-router-dom';
+
+import Register     from './pages/Register';
+import Login        from './pages/Login';
+import Dashboard    from './pages/Dashboard';
 import SettingsPage from './pages/SettingsPage';
 
-const App = () => {
-  const [isAuthenticated, setAuth] = useState(false);
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token');
+  return token
+    ? children
+    : <Navigate to="/login" replace />;
+}
+
+export default function App() {
+  const [isAuthenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setAuth(!!token);
+    setAuthenticated(!!token);
   }, []);
 
-  const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" />;
-  };
+  // pass this into Login so it can update auth state
+  const handleSetAuth = auth => setAuthenticated(auth);
 
   return (
     <Router>
       <Routes>
-        {/* Redirect root to dashboard */}
+        {/* Redirect root to dashboard (ProtectedRoute will forward to login if needed) */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Dashboard & Projects both use the same component */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/projects"  element={<Dashboard />} />
+        {/* Public */}
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={<Login setAuth={handleSetAuth} />}
+        />
 
-        {/* Your settings page */}
-        <Route path="/settings" element={<SettingsPage />} />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/" element={<Register />} />
-        <Route path="/login" element={<Login setAuth={setAuth} />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/Login" element={<Login />} />
+        {/* Protected */}
         <Route
           path="/dashboard"
           element={
@@ -44,9 +52,26 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all → login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
-};
-
-export default App;
+}

@@ -9,6 +9,7 @@ const projectRoutes = require('./routes/projectRoutes');
 const userRoutes = require('./routes/userRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 // ...other imports
 
 const app = express();  // <-- Declare app first!
@@ -21,7 +22,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/tickets', ticketRoutes); // <-- Place AFTER app is defined
-
+app.use('/api/comments', commentRoutes);
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
