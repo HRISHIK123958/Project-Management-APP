@@ -19,10 +19,10 @@ export default function CommentsSection({ ticketId, token }) {
     }
   };
 
-  // CORRECTED: invoke fetchComments inside an arrow effect,
-  // so the effect returns undefined (no cleanup), not a Promise.
+  // Run once on mount and whenever ticketId changes
   useEffect(() => {
     fetchComments();
+    // No return → React sees undefined, so no cleanup is called
   }, [ticketId]);
 
   const handleSubmit = async e => {
@@ -44,6 +44,7 @@ export default function CommentsSection({ ticketId, token }) {
   return (
     <div className="mt-4 border-t pt-3">
       <h5 className="text-sm font-semibold mb-2">Comments</h5>
+
       <div className="space-y-2 max-h-40 overflow-y-auto">
         {comments.map(c => (
           <div key={c._id} className="text-xs">
@@ -55,6 +56,7 @@ export default function CommentsSection({ ticketId, token }) {
           </div>
         ))}
       </div>
+
       <form onSubmit={handleSubmit} className="mt-2 flex gap-2">
         <input
           type="text"

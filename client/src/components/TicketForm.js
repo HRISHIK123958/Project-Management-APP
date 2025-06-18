@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 
-const TicketForm = ({ onCreate, teamMembers }) => {
+export default function TicketForm({ onCreate, teamMembers }) {
   const [form, setForm] = useState({
-    title: "",
+    title:       "",
     description: "",
-    priority: "Medium",
-    assignee: "",
+    priority:    "Medium",
+    assignee:    "",
   });
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = e =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -17,8 +18,14 @@ const TicketForm = ({ onCreate, teamMembers }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/90 p-5 rounded-2xl shadow-xl flex flex-col gap-3 animate-fade-in">
-      <h3 className="text-lg font-bold text-blue-700 mb-2">Create New Ticket</h3>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white/90 p-5 rounded-2xl shadow-xl flex flex-col gap-3 animate-fade-in"
+    >
+      <h3 className="text-lg font-bold text-blue-700 mb-2">
+        Create New Ticket
+      </h3>
+
       <input
         name="title"
         value={form.title}
@@ -27,6 +34,7 @@ const TicketForm = ({ onCreate, teamMembers }) => {
         className="border p-2 rounded"
         required
       />
+
       <textarea
         name="description"
         value={form.description}
@@ -35,6 +43,7 @@ const TicketForm = ({ onCreate, teamMembers }) => {
         rows={2}
         className="border p-2 rounded"
       />
+
       <div className="flex gap-2">
         <select
           name="priority"
@@ -46,6 +55,7 @@ const TicketForm = ({ onCreate, teamMembers }) => {
           <option>Medium</option>
           <option>High</option>
         </select>
+
         <select
           name="assignee"
           value={form.assignee}
@@ -53,14 +63,18 @@ const TicketForm = ({ onCreate, teamMembers }) => {
           className="border p-2 rounded flex-1"
         >
           <option value="">Unassigned</option>
-          {teamMembers && teamMembers.map(m => <option key={m} value={m}>{m}</option>)}
+          {teamMembers.map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
         </select>
       </div>
-      <button type="submit" className="bg-gradient-to-tr from-fuchsia-600 to-blue-600 text-white rounded-lg py-2 font-bold shadow hover:scale-105 transition">
+
+      <button
+        type="submit"
+        className="bg-gradient-to-tr from-fuchsia-600 to-blue-600 text-white rounded-lg py-2 font-bold shadow hover:scale-105 transition"
+      >
         Create Ticket
       </button>
     </form>
   );
-};
-
-export default TicketForm;
+}

@@ -22,7 +22,11 @@ const Login = ({ setAuth }) => {
         `${process.env.REACT_APP_API_URL}/users/login`,
         form
       );
+
+      // store token and user info for later pages
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+
       setAuth(true);
       navigate('/dashboard');
     } catch (err) {
@@ -77,7 +81,10 @@ const Login = ({ setAuth }) => {
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Don’t have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline font-medium">
+          <Link
+            to="/register"
+            className="text-blue-600 hover:underline font-medium"
+          >
             Register
           </Link>
         </p>

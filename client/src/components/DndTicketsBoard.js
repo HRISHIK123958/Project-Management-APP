@@ -1,4 +1,3 @@
-// src/components/DndTicketsBoard.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -10,27 +9,32 @@ import {
 import TicketForm from './TicketForm';
 import CommentsSection from './CommentsSection';
 
-const statusOrder = ['todo', 'inprogress', 'done'];
+const statusOrder  = ['todo', 'inprogress', 'done'];
 const statusLabels = {
-  todo: 'To Do',
+  todo:       'To Do',
   inprogress: 'In Progress',
-  done: 'Done'
+  done:       'Done'
 };
 
 export default function DndTicketsBoard({ project }) {
   const navigate = useNavigate();
-  const [columns, setColumns] = useState({ todo: [], inprogress: [], done: [] });
 
-  // Bucket tickets by status
+  const [columns,        setColumns]       = useState({ todo:[], inprogress:[], done:[] });
+  const [filterStatus,   setFilterStatus]  = useState('all');
+  const [filterPriority, setFilterPriority]= useState('all');
+  const [filterAssignee, setFilterAssignee]= useState('all');
+  const [searchTerm,     setSearchTerm]    = useState('');
+
+  // Bucket tickets into columns by status
   const bucketTickets = tickets => {
-    const b = { todo: [], inprogress: [], done: [] };
+    const b = { todo:[], inprogress:[], done:[] };
     tickets.forEach(t => {
       if (b[t.status]) b[t.status].push(t);
     });
     setColumns(b);
   };
 
-  // Fetch tickets
+  // Fetch tickets with query params
   const fetchTickets = async () => {
     if (!project) return;
     const token = localStorage.getItem('token');
@@ -39,7 +43,15 @@ export default function DndTicketsBoard({ project }) {
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/tickets/project/${project._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            status:   filterStatus,
+            priority: filterPriority,
+            assignee: filterAssignee,
+            search:   searchTerm
+          }
+        }
       );
       bucketTickets(res.data);
     } catch (err) {
@@ -52,15 +64,24 @@ export default function DndTicketsBoard({ project }) {
     }
   };
 
+  // ❌ Wrong: passing async fns directly returns a Promise as cleanup
+  // useEffect(fetchTickets, [project, filterStatus, filterPriority, filterAssignee, searchTerm]);
+
+  // ✅ Correct: wrap in an arrow so effect returns undefined
   useEffect(() => {
     fetchTickets();
-  }, [project]);
+  }, [
+    project,
+    filterStatus,
+    filterPriority,
+    filterAssignee,
+    searchTerm
+  ]);
 
-  // Drag-and-drop handler
+  // Handle drag & drop status updates
   const onDragEnd = async result => {
     const { source, destination, draggableId } = result;
     if (!destination || source.droppableId === destination.droppableId) return;
-
     const newStatus = destination.droppableId;
     const token = localStorage.getItem('token');
     if (!token) return navigate('/login');
@@ -68,31 +89,30 @@ export default function DndTicketsBoard({ project }) {
     // Optimistic UI update
     const moved = columns[source.droppableId].find(t => t._id === draggableId);
     setColumns(cols => {
-      const src = Array.from(cols[source.droppableId]);
-      src.splice(source.index, 1);
+      const src  = Array.from(cols[source.droppableId]);
       const dest = Array.from(cols[newStatus]);
+      src.splice(source.index, 1);
       dest.splice(destination.index, 0, moved);
       return { ...cols, [source.droppableId]: src, [newStatus]: dest };
     });
 
-    // Persist
+    // Persist to server
     try {
       await axios.put(
         `${process.env.REACT_APP_API_URL}/tickets/${draggableId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-    } catch (err) {
-      console.error('Save status failed', err);
-      fetchTickets(); // revert
+    } catch {
+      console.error('Save status failed');
+      fetchTickets(); // revert on error
     }
   };
 
-  // Create ticket handler
+  // Create new ticket
   const handleCreate = async data => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/login');
-
     try {
       await axios.post(
         `${process.env.REACT_APP_API_URL}/tickets`,
@@ -111,11 +131,61 @@ export default function DndTicketsBoard({ project }) {
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">{project.title} — Kanban</h2>
+      <h2 className="text-2xl font-bold mb-4">
+        {project.title} — Kanban
+      </h2>
+
+      {/* ── Filters & Search ── */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <select
+          value={filterStatus}
+          onChange={e => setFilterStatus(e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="all">All Statuses</option>
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+
+        <select
+          value={filterPriority}
+          onChange={e => setFilterPriority(e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="all">All Priorities</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+
+        <select
+          value={filterAssignee}
+          onChange={e => setFilterAssignee(e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="all">All Assignees</option>
+          {project.teamMembers.map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          placeholder="Search tickets..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="border p-2 rounded flex-1 min-w-[200px]"
+        />
+      </div>
 
       {/* Ticket creation form */}
-      <TicketForm onCreate={handleCreate} teamMembers={project.teamMembers} />
+      <TicketForm
+        onCreate={handleCreate}
+        teamMembers={project.teamMembers}
+      />
 
+      {/* Kanban board */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {statusOrder.map(status => (
@@ -127,9 +197,16 @@ export default function DndTicketsBoard({ project }) {
                   className={`p-4 rounded-xl shadow-lg bg-white transition-colors
                     ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
                 >
-                  <h3 className="text-xl font-semibold mb-3">{statusLabels[status]}</h3>
+                  <h3 className="text-xl font-semibold mb-3">
+                    {statusLabels[status]}
+                  </h3>
+
                   {columns[status].map((ticket, idx) => (
-                    <Draggable key={ticket._id} draggableId={ticket._id} index={idx}>
+                    <Draggable
+                      key={ticket._id}
+                      draggableId={ticket._id}
+                      index={idx}
+                    >
                       {(prov, snap) => (
                         <div
                           ref={prov.innerRef}
@@ -139,7 +216,9 @@ export default function DndTicketsBoard({ project }) {
                             ${snap.isDragging ? 'scale-105 bg-gray-200' : ''}`}
                         >
                           <h4 className="font-medium">{ticket.title}</h4>
-                          <p className="text-xs text-gray-600">{ticket.priority}</p>
+                          <p className="text-xs text-gray-600">
+                            {ticket.priority}
+                          </p>
 
                           {/* Comments */}
                           <CommentsSection
@@ -150,6 +229,7 @@ export default function DndTicketsBoard({ project }) {
                       )}
                     </Draggable>
                   ))}
+
                   {provided.placeholder}
                 </div>
               )}
