@@ -1,96 +1,115 @@
+// src/pages/Register.jsx
 import React, { useState } from 'react';
+import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 
-const Register = () => {
+export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    setMessage('');
+    setError('');
+    setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/users/register`,
+        form
+      );
 
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('✅ Registration successful!');
-        console.log('User registered:', data);
-      } else {
-        setMessage(`❌ ${data.error}`);
-      }
+      // Optionally automatically log them in:
+      // localStorage.setItem('token', res.data.token);
+      // localStorage.setItem('user', JSON.stringify(res.data.user));
+
+      // Show a quick success message then redirect:
+      setLoading(false);
+      navigate('/login', { replace: true });
     } catch (err) {
-      console.error('Registration error:', err);
-      setMessage('❌ Something went wrong');
+      setLoading(false);
+      setError(err.response?.data?.error || '❌ Something went wrong');
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
-      <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-        <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-8">Create Account</h2>
-        <form onSubmit={handleSubmit}>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Name</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Your Name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full p-3 mb-5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
+      >
+        <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-8">
+          Create Account
+        </h2>
 
-          <label className="block mb-2 text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            name="email"
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full p-3 mb-5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+        {error && (
+          <div className="mb-4 p-3 text-red-700 bg-red-100 border border-red-300 rounded">
+            {error}
+          </div>
+        )}
 
-          <label className="block mb-2 text-sm font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            name="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+        <label className="block mb-2 text-sm font-medium text-gray-700">
+          Name
+        </label>
+        <input
+          name="name"
+          type="text"
+          value={form.name}
+          onChange={handleChange}
+          required
+          placeholder="Your Name"
+          className="w-full p-3 mb-5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
 
-          <button
-            type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition duration-300"
+        <label className="block mb-2 text-sm font-medium text-gray-700">
+          Email
+        </label>
+        <input
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          placeholder="you@example.com"
+          className="w-full p-3 mb-5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <label className="block mb-2 text-sm font-medium text-gray-700">
+          Password
+        </label>
+        <input
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          placeholder="••••••••"
+          className="w-full p-3 mb-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition duration-300"
+        >
+          {loading ? 'Registering…' : 'Register'}
+        </button>
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <Link
+            to="/login"
+            className="text-blue-600 hover:underline font-medium"
           >
-            Register
-          </button>
-
-          {message && (
-            <p className="mt-4 text-center text-sm text-red-500">{message}</p>
-          )}
-
-          <p className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <a href="/Login" className="text-blue-600 hover:underline font-medium">
-              Login
-            </a>
-          </p>
-        </form>
-      </div>
+            Login
+          </Link>
+        </p>
+      </form>
     </div>
   );
-};
-
-export default Register;
+}
