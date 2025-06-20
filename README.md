@@ -59,15 +59,6 @@ JWT_SECRET=your_jwt_secret
 EMAIL_USER=your_email@example.com
 EMAIL_PASS=your_email_password
 
-![Screenshot 2025-06-20 185306](https://github.com/user-attachments/assets/fbd34e6c-82af-4fc5-b001-101c03f77c92)
-
-
-
-
-
-
-
-
 ├── client/           # React + Tailwind frontend
 │   ├── public/
 │   ├── src/
